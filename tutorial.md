@@ -113,7 +113,7 @@ plot_results(file_name, K,tau_e, tau_k, delta, eps,reg_num,rand,vanilla, save, o
 ### `Non Gaussian`
 Consider Model 2 of the paper with
 
-	$$\mathcal{L}(y_n | \mu, \mathbf{a} ) = \mathcal{L}(y_n | \eta_n ),\text{ with }\eta_n = \mu +\sum_{k=1}^K a_{i_{k}[n]}^{(k)}  \quad\text{ for } n=1,...,N, $$
+ $$\mathcal{L}(y_n | \mu, \mathbf{a} ) = \mathcal{L}(y_n | \eta_n ), \text{ with } \eta_n = \mu +\sum_{k=1}^K a_{i_{k}[n]}^{(k)}  \quad \text{ for } n=1,...,N, $$
  $$\mathcal{L}(y_n | \mu, \mathbf{a} )= Lapl( \eta_n ,1) $$
 
 ## Code 
