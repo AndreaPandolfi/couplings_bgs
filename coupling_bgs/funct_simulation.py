@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import random
 import scipy.linalg as la
+from math import erf
 from scipy.special import erfinv
 
 
@@ -221,7 +222,7 @@ class Data:
                     self.N_sl[i][j][self.ii[n,i], self.ii[n,j]] += 1
                     
     # function to compute the theoretical convergence rate ecploiting the work in https://www.jstor.org/stable/2346048
-    # both for plain vanilla and collapsed gibbs
+    # both for vanilla and collapsed gibbs
     def conv_rate(self, tau_e, tau):
         index = np.zeros(1+self.K).astype(int)
         index[0] = 1
@@ -237,8 +238,8 @@ class Data:
                 else:
                     Q[index[i]:index[i+1],index[j]:index[j+1]] = self.N_sl[i][j]*tau_e
         A = np.identity(Q.shape[0])- la.block_diag(1/Q[0,0],*[la.inv(Q[index[i]:index[i+1],index[i]:index[i+1]]) for i in range(self.K)])@Q
-        U = la.triu(A)
-        L = la.tril(A)
+        U = np.triu(A)
+        L = np.tril(A)
         
         # vanilla scheme 
         B_pv = la.inv((np.identity(A.shape[0])-L))@U
@@ -699,7 +700,7 @@ def plot_results(file_name, K,tau_e, tau_k, delta, eps,reg_num,rand=True,vanilla
                         aux =aux@B
                         n_d+= 1
 
-                    bound_vanilla[di, en]=(1+np.max((n_d, np.ceil((0.5 *np.log(12+8*np.sqrt(2/np.pi))*erfinv(eps)+ 1/(2*np.sqrt(2)*np.e))/(1-(rho))*(1+d)/(1-eps)))) +  1+  np.max((n_d, np.ceil((  (0.5*np.mean(np.log(data[ (data['I']==I[en]) & (data['var']=='fixed') & (data['coll']=='plain')]['dist']   ))-0.5*np.log(rho_sbsb_pv) - np.log(erfinv(eps)*2*np.sqrt(2))))/(1-rho)*(1+d)))) )
+                    bound_vanilla[di, en]=(1+np.max((n_d, np.ceil((0.5 *np.log(12+8*np.sqrt(2/np.pi))*erfinv(eps)+ 1/(2*np.sqrt(2)*np.e))/(1-(rho))*(1+d)/(1-eps)))) +  1+  np.max((n_d, np.ceil((  (0.5*np.mean(np.log(data[ (data['I']==I[en]) & (data['var']=='fixed') & (data['coll']=='vanilla')]['dist']   ))-0.5*np.log(rho_sbsb_pv) - np.log(erfinv(eps)*2*np.sqrt(2))))/(1-rho)*(1+d)))) )
 
         else:
             d = 0
@@ -707,7 +708,7 @@ def plot_results(file_name, K,tau_e, tau_k, delta, eps,reg_num,rand=True,vanilla
             n_d = 0 
             bound[0, en]= 2+  np.ceil(a1)/(1-eps) +  np.ceil(a2)
             if vanilla:
-                bound_vanilla[0, en]= 1+ np.ceil((0.5 *np.log(12+8*np.sqrt(2/np.pi))*erfinv(eps)+ 1/(2*np.sqrt(2)*np.e))/(1-(rho))*(1+d)/(1-eps)) +  1+  np.ceil(  (0.5*np.mean(np.log(data[ (data['I']==I[en]) & (data['var']=='fixed') & (data['coll']=='plain')]['dist']   ))-0.5*np.log(rho_sbsb_pv) - np.log(erfinv(eps)*2*np.sqrt(2))))/(1-rho)
+                bound_vanilla[0, en]= 1+ np.ceil((0.5 *np.log(12+8*np.sqrt(2/np.pi))*erfinv(eps)+ 1/(2*np.sqrt(2)*np.e))/(1-(rho))*(1+d)/(1-eps)) +  1+  np.ceil(  (0.5*np.mean(np.log(data[ (data['I']==I[en]) & (data['var']=='fixed') & (data['coll']=='vanilla')]['dist']   ))-0.5*np.log(rho_sbsb_pv) - np.log(erfinv(eps)*2*np.sqrt(2))))/(1-rho)
 
         
     plt.figure(figsize=(10,5))
@@ -726,7 +727,7 @@ def plot_results(file_name, K,tau_e, tau_k, delta, eps,reg_num,rand=True,vanilla
             plt.scatter(range(len(I)), bound[di,:],s= 200, marker = '*')
     for m in data[['coll','var']].drop_duplicates().iterrows():
         if vanilla == False:
-            if m[1][0]!= "plain":
+            if m[1][0]!= "vanilla":
                 plt.plot(range(len(I)),   [ 1+ np.mean(data.iloc[data.groupby(['coll','var','I']).groups[(str(m[1]['coll']),str(m[1]['var']),i)].tolist(),:]['t']) for i in I], label= (str(m[1]['coll'])+',  '+ str(m[1]['var'])))
                 plt.scatter(range(len(I)),[ 1+ np.mean(data.iloc[data.groupby(['coll','var','I']).groups[(str(m[1]['coll']),str(m[1]['var']),i)].tolist(),:]['t']) for i in I], s=50)
         else:
@@ -750,7 +751,6 @@ def plot_results(file_name, K,tau_e, tau_k, delta, eps,reg_num,rand=True,vanilla
     plt.legend(fontsize=25)
     
     plt.rc('font',family='Cambria Math')
-    matplotlib.rc('font',family='Cambria Math')
     plt.title("Average meeting times",fontsize = 30,**font)
     plt.ylim(0)
     plt.grid(True, which="both")
@@ -761,43 +761,44 @@ def plot_results(file_name, K,tau_e, tau_k, delta, eps,reg_num,rand=True,vanilla
 
 def run_experiment(K,I, J,tau_e, tau_k, eps, reg_num, rand=True,export_results = False,T_max = 200, filename=[], collapsed = [], variance = [], S=1, rho=1, cappa = 1):
     if len(collapsed) != len(variance):
-        print("variants error")
-        return -1
+        raise ValueError("collapsed and variance must have the same length")
     
     distances = np.zeros((len(collapsed ), len(I), J))
     times = np.zeros((len(collapsed ), len(I), J))
+    epsis = np.zeros((len(collapsed ), len(I), J))
 
     for en,i in enumerate(I):
-        print('#####################  '+ str(i)+ '  #################################################################\n' )
+        print('######################  '+ str(i)+ '  ######################' )
         x = asymptotic_regimes(reg_num, K , i, S, rho, cappa)
         rho, rho_coll, Sigma , B, B_coll= x.conv_rate(tau_e,tau_k)
         rho_sbsb_pv = np.max(np.abs(la.eigvals(Sigma - B@Sigma@B.transpose())))
         rho_sbsb_coll = np.max(np.abs(la.eigvals(Sigma[1:,1:] - B_coll@Sigma[1:,1:]@B_coll.transpose())))
         epsi_coll = (erfinv(eps))**2*8/(np.linalg.norm(B_coll))**2*rho_sbsb_coll
         epsi_pv = (erfinv(eps))**2*8/(np.linalg.norm(B))**2*rho_sbsb_pv
-        print(np.linalg.norm(B_coll),epsi_coll )
         print("go!")
         for e,(m,n) in enumerate(zip(collapsed,variance)):
-            print("collapsed, fixed variance=", m,n)
+            print(f"collapsed: {m}, fixed variance: {n}")
             if m == False:
                 epsi = epsi_pv
             else:
                 epsi = epsi_coll
-                print(epsi_coll)
+            print(f"eps: {epsi}")
+            # store epsi for each of the J replicates for this (collapsed, I) combination
+            epsis[e,en,:] = epsi
             for j in range(J):
                 a,b,distances[e,en,j], times[e,en,j]= MCMC_sampler_coupled(x, collapsed=m, PX=True, L=1, T=T_max, dist=epsi, rand= rand, var_fixed=n )
-                print(times[e,en,j])
-            pd.DataFrame(times.flatten()).to_csv("aux_"+str(K))    
+                # print(times[e,en,j])
                 
 
     df = pd.DataFrame()
     df['t'] = times.flatten()
     df['dist'] = distances.flatten()
+    df['eps'] = epsis.flatten()
     df['I'] = np.hstack([np.repeat(I,J) for h in range(len(collapsed))])
     aux = [ [str(m)]*len(I)*J for m in collapsed]
     df['coll'] = [a for b in aux for a in b]
     df['coll'] = df['coll'].str.replace('True','collapsed')
-    df['coll'] = df['coll'].str.replace('False','plain')
+    df['coll'] = df['coll'].str.replace('False','vanilla')
     aux = [ [str(n)]*len(I)*J for n in variance]
     df['var'] = [a for b in aux for a in b]
     df['var'] = df['var'].str.replace('True','fixed')
