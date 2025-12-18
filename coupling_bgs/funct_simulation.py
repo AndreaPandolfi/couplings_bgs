@@ -255,8 +255,8 @@ class Data:
         Q_c= D-Q[1:,0].reshape(np.sum(self.iss),1)@Q[0,1:].reshape(1,np.sum(self.iss))/self.N
         A = np.identity(Q_c.shape[0])- la.block_diag(*[la.inv(Q_c[index[i]:index[i+1],index[i]:index[i+1]]) for i in range(self.K)])@Q_c
         
-        U = la.triu(A)
-        L = la.tril(A)
+        U = np.triu(A)
+        L = np.tril(A)
         B_coll = la.inv((np.identity(A.shape[0])-L))@U
         rho_coll = np.max(np.abs(la.eigvals(B_coll)))
         return rho_pv, rho_coll,Sigma, B_pv, B_coll

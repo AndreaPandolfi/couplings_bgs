@@ -95,7 +95,7 @@ funct.run_experiment(K,I, num_runs, tau_e, tau_k, eps, reg_num,
 K = 4
 reg_num = 1
 collapsed = [True, True]
-variance = [False]
+variance = [False, True]
 tau_e = 1
 tau_k = np.ones(K)
 T_max = 1000 
