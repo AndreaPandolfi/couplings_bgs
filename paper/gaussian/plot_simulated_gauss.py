@@ -103,8 +103,8 @@ for reg_num, K in [(1,2), (2,2)]:
 
 # Collapsed
 collapsed = True
-for reg_num, K in [(1,2), (1,3), (1,4), (2,2)]:
-# for reg_num, K in [(1,2)]:
+for reg_num, K in [(1,2), (1,3), (1,4), (2,2), (2,4)]:
+# for reg_num, K in [(2,4)]:
     tau_e = 1; tau_k = np.ones(K)
 
     fname = os.path.join(output_dir, f"{file_string(reg_num, K, collapsed)}.csv")

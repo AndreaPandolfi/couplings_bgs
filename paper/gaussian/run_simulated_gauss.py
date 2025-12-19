@@ -105,3 +105,19 @@ funct.run_experiment(K,I, num_runs, tau_e, tau_k, eps, reg_num,
                     rand = rand,export_results = export_results,
                     T_max = T_max, filename = filename, 
                     collapsed = collapsed , variance = variance)
+
+
+# sparse, K= 4, collapsed
+K = 4
+reg_num = 2
+collapsed = [True, True]
+variance = [False, True]
+tau_e = 1
+tau_k = np.ones(K)
+T_max = 1000 
+filename=os.path.join(output_dir, f"{utils.file_string(reg_num, K, collapsed[0])}.csv")
+delta = 0.1
+funct.run_experiment(K,I, num_runs, tau_e, tau_k, eps, reg_num, 
+                    rand = rand,export_results = export_results,
+                    T_max = T_max, filename = filename, 
+                    collapsed = collapsed , variance = variance)
