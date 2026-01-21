@@ -78,7 +78,7 @@ def plot_results(file_name, K,tau_e, tau_k, delta, eps, reg_num, vanilla = False
         ax.scatter(range(len(I)), avg_meeting_times, s=50)
 
 
-    ax.plot(range(len(I)), bound,'--',label='bound, fixed var, delta='+str(delta))
+    ax.plot(range(len(I)), bound,'--',label='bound, fixed var')
     ax.scatter(range(len(I)), bound,s= 200, marker = '*')
 
 
