@@ -48,10 +48,10 @@ def plot_results(file_name, K,tau_e, tau_k, delta, eps, reg_num, vanilla = False
         bound[en]= compute_bound(dist0, K, kappa, eps, rho)
 
         print(f"mixing time: {1/(1-rho)}, log(kappa) = {np.log(kappa)}, log(dist0) = {dist0}, -log(eps) = {-np.log(eps)}, bound = {bound[en]}")
-    fig, ax = plt.subplots(figsize=(10,5))
-    ax.tick_params(axis='both', labelsize=20)
-    ax.tick_params(axis='x', labelsize=20)
-    ax.tick_params(axis='y', labelsize=20)
+    fig, ax = plt.subplots(figsize=(6,3))
+    ax.tick_params(axis='both', labelsize=12)
+    ax.tick_params(axis='x', labelsize=12)
+    ax.tick_params(axis='y', labelsize=12)
 
     if log_scale:
         ax.set_yscale('log')
@@ -83,12 +83,10 @@ def plot_results(file_name, K,tau_e, tau_k, delta, eps, reg_num, vanilla = False
 
 
 
-    ax.set_ylabel("Meeting time", fontsize=20)
-    ax.set_xlabel("Parameters number", fontsize= 20)
-    ax.legend(fontsize=15)
+    ax.set_ylabel("Meeting time", fontsize=15)
+    ax.set_xlabel("Parameters number", fontsize= 15)
+    ax.legend(fontsize=12)
 
-    # ax.set_title("Average meeting times",fontsize = 30)
-    # ax.set_ylim(0.1)
     ax.grid(True, which="major")
     fig.tight_layout()
     if save:
