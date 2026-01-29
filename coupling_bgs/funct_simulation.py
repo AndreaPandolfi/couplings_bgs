@@ -398,6 +398,9 @@ class iter_value:
                     self.tau[k] = np.random.gamma(size=1, shape= data.iss[k]/2-0.5, scale= 2/sum(np.power(self.a[k],2)))
                     np.random.seed(aux_r[k])
                     val_2.tau[k] = np.random.gamma(size=1, shape= data.iss[k]/2-0.5, scale= 2/sum(np.power(val_2.a[k],2)))
+                    if sum(np.power(val_2.a[k],2)) < .0000001:
+                        print(sum(np.power(val_2.a[k],2)))
+                        print(f'k={k}, t={t}, sum_a_l={sum_a_l}, sum_a_l_2={sum_a_l_2}, val_1.a[k]={self.a[k]}, val_2.a[k]={val_2.a[k]}')
                 else:
                     self.tau[k], val_2.tau[k] = maximal_coupling_gamma(data.iss[k]/2-0.5,2/sum(np.power(self.a[k],2)),2/sum(np.power(val_2.a[k],2)))
                 
@@ -526,7 +529,7 @@ def MCMC_sampler_single(data, T,collapsed=False, PX=False, rand=False, var_fixed
     return val_1
 
 # function that, given model specification and parameters and REAL data as input, generate the coupled chains
-def MCMC_sampler_coupled_realdataset(data,collapsed=False, PX=False,L=1, T = 100, dist = 1e-2, rand= False, tau = None, tau_e = None): 
+def MCMC_sampler_coupled_realdataset(data,collapsed=False, PX=False,L=1, T = 100, dist = 1e-2, rand= False, tau = None, tau_e = None, return_dist0=False): 
     N = data.N
     K = data.K
    
@@ -545,6 +548,7 @@ def MCMC_sampler_coupled_realdataset(data,collapsed=False, PX=False,L=1, T = 100
     coupling = False
     for l in range(L):
         val_1.update(data,l,collapsed, PX)
+    dist0 = distance(val_1, val_2)
     t=0
     while t<T:
         close = (distance(val_1, val_2) < dist )
@@ -553,7 +557,8 @@ def MCMC_sampler_coupled_realdataset(data,collapsed=False, PX=False,L=1, T = 100
             print("finished:",t)
             break
         t+=1
-    
+    if return_dist0:
+        return val_1,val_2, t, dist0
     return val_1,val_2, t
  
 # generate data according to asymptotic regime 1 / 2 / 3
